@@ -11,6 +11,8 @@ import java.util.function.Supplier;
 import java.util.regex.*;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 public class Sol8 {
 
@@ -91,17 +93,13 @@ public class Sol8 {
             Node l = new Node(edge[0]);
             Node r =  new Node(edge[1]);
             nMap.putIfAbsent(edge[0], l);
-            Node clNode = nMap.get(edge[0]);
-            Edge edgel = new Edge(l, r, clNode.edges.size());
-            clNode.edges.add(edgel);
             nMap.putIfAbsent(edge[1], r);
+            Node clNode = nMap.get(edge[0]);
             Node crNode = nMap.get(edge[1]);
-
-            Edge edger = new Edge(r, l, crNode.edges.size());
-
+            Edge edgel = new Edge(clNode, crNode, clNode.edges.size());
+            clNode.edges.add(edgel);
+            Edge edger = new Edge(crNode, clNode, crNode.edges.size());
             crNode.edges.add(edger);
-
-
         }
     }
 
@@ -120,11 +118,12 @@ public class Sol8 {
         return n.edges.stream().filter(e -> !e.cut).findFirst().get();
     }
 
-    static Node moveToLeafNode(Node n, Edge e) {
-        if (n.edges.size() == 0)
+    static Node moveToLeafNode(Node n, Edge ne) {
+        Edge  one = n.edges.stream().filter(e -> e.index == 0).findFirst().get();
+        Node nn = one.out;
+        if (n.edges.size() == 1 && one.in.equals(n))
             return n;
-        Edge ne = n.edges.get(0);
-        return moveToLeafNode(ne.out, ne);
+        return moveToLeafNode(nn, one);
     }
 
     static void combinationUtil(List<int[]> combinations, int data[], int start, int end, int index)
@@ -140,39 +139,43 @@ public class Sol8 {
 
     }
 
+    // using BFS calculate nodes at each level 
     static Map<Integer, Integer> bfs(int[] combs, int k, Node n) {
-        Queue<Node> nnodes = new LinkedList<>();
         int level = 1;
         Map<Integer, Integer> lcount = new HashMap<>();
-        nnodes.add(n);
         List<Edge> edges = n.edges;
-        lcount.put(level, edges.size());
         Queue<Node> lnodes = new LinkedList<>();
-        for(int i = 1; i < combs.length / k; ++i) {
+        IntStream s = Arrays.stream(combs);
+        Queue<Node> nnodes = edges
+                .stream()
+                .filter(e -> s.anyMatch(se -> se == e.index))
+                .map(e -> e.out).collect(Collectors.toCollection(LinkedList::new));
+        while(level <= k - 1) {
             while(nnodes.isEmpty()) {
                 Node nn = nnodes.remove();
                 for (Edge e : nn.edges) {
-                    lnodes.add(e.out);
-                }
-                ++level;
-                lcount.put(level, lnodes.size());
+                        lnodes.add(e.out);
+                }   
             }
+            ++level;    
+            lcount.put(level, lnodes.size());
             nnodes.addAll(lnodes);
             lnodes.clear();
-        }
+        }        
         return lcount;
     }
 
+    // calculate subtrees count using formula (lc1 c 1 + lc1 c 2+ .. + lc1 c lc1) * (level -1) == 2^n - 1 * (level -1)
     static int calculateSubtrees(int[] combs, int k, Node n) {
         Map<Integer, Integer>  lcount =  bfs(combs, k, n);
         int count = 0, level = 1;
         for(Map.Entry<Integer, Integer> entry : lcount.entrySet()) {
             if (level == 1) {
                 ++ count;
-                continue;
             } else {
                 count += (Math.pow(2, entry.getValue()) - 1 ) * (level - 1);
             }
+            ++level;
         }
         return count;
     }
@@ -180,13 +183,14 @@ public class Sol8 {
     static void calculateNodesAndSubTrees(Node n, Node pn, Edge e, int totalNodes, int k) {
         e.cut = true;
         if (pn == null) {
-           Edge ne = moveUp(n);
-           ne.cut = true;
-
-           calculateNodesAndSubTrees(ne.out, n, ne, totalNodes, k);
+           Edge ne = n.edges.get(0);
+           Node nn = ne.out;
+           n.cnMap.put(ne.index, 1);
+           count[nn.index] =  1;
+           calculateNodesAndSubTrees(ne.out, nn, ne, totalNodes, k);
         } else {
             if (n.edges.size() == 1) {
-                int pcn = pn.cnMap.values().stream().mapToInt(i -> i.intValue()).sum();
+                int pcn = pn.cnMap.values().stream().mapToInt(i -> i).sum();
                 n.cnMap.put(e.index, pcn + 1);
                 count[n.index] = pcn + 1;
             } else if (n.edges.size() > 1) {
@@ -204,24 +208,27 @@ public class Sol8 {
                         // its recursive and previously calculated combinations can be used
                 int ecount = 0;
                 int ceindex = 0;
+                count[n.index] = 1;
                 for(Edge ne: n.edges) {
                     Node nn = moveToLeafNode(n, ne);
-                    Edge nne = nn.edges.get(0);
+                    Edge nne = nn.edges.stream().filter(cenode -> cenode.index == 0).findFirst().get();
                     nn.cnMap.put(nne.index, 1);
                     count[nn.index] = 1;
                     ecount += 1;
                     nne.cut = true;
+                    pn = nn;
                     while(nne.out.equals(n)) {
                         Node un = nne.out;
-                        Edge ue = un.edges.get(0);
+                        Edge ue = un.edges.stream().filter(cenode -> cenode.index == 0).findFirst().get();
                         if (un.edges.size() == 1) {
-
                             un.cnMap.put(ue.index, nn.cnMap.get(nne.index) + 1);
                             ecount += count[un.index] = count[nn.index] + 1;
                             nne = ue;
                         } else {
-                            calculateNodesAndSubTrees(un, nn, ue, totalNodes, k);
+                            calculateNodesAndSubTrees(un, pn, ue, totalNodes, k);
+                            ecount += count[un.index];
                         }
+                        pn = un;
                     }
                     n.cnMap.put(e.index, ecount);                
                     ecount = 0;
@@ -236,28 +243,28 @@ public class Sol8 {
                                 for (int i = 0; i < entrySet.size() - 1; ++i) {
                                     int[] iarray = entrySet.stream()
                                     .filter(ed -> !ed.getKey().equals(e.index))
-                                    .mapToInt(ed -> ed.getValue().intValue()).toArray();
+                                    .mapToInt(Map.Entry::getKey).toArray();
                                     List<int[]> combNodes = new ArrayList<>();
                                     combinationUtil(combNodes, iarray, 0, iarray.length - 1, i);
                                     combMap.put(i, combNodes);
                                 } 
-                                for(Map.Entry<Integer, List<int[]>> entry: combMap.entrySet()) {
-                                    if (dindex >= totalNodes - k) {
-                                        List<int[]> cccombs = entry.getValue();
-                                        cccombs.forEach( combc -> {
-                                            count[dn.index] += calculateSubtrees(combc, (totalNodes - k) - dindex, n);
-                                        });
+                            }
+                            for(Map.Entry<Integer, List<int[]>> entry: combMap.entrySet()) {
+                                if (dindex <= totalNodes - k) {
+                                    List<int[]> cccombs = entry.getValue();
+                                    for(int[] combc : cccombs)  {
+                                        count[dn.index] += calculateSubtrees(combc, (totalNodes - k) - dindex, n);
+                                    };
 
-                                    }
                                 }
                             }
+
+                            ++dindex;
                         }
                         
                     }
 
                 }
-
-
             }
         }
     }
@@ -270,9 +277,7 @@ public class Sol8 {
          * Write your code here.
          */
         Node cnode = nMap.get(1);
-        Node n = moveDown(cnode, cnode.edges.get(0));
-        cn[n.index][n.edges.get(0).index][(totalNodes - k)] = 1;
-        count[n.index] = 1;
+        Node n = moveToLeafNode(cnode, cnode.edges.get(0));
         calculateNodesAndSubTrees(n, null, n.edges.get(0), totalNodes, k);
 
         // Calculate connected nodes for all nodes
