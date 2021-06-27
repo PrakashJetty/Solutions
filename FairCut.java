@@ -56,7 +56,7 @@ class Result1 {
      *  2. INTEGER_ARRAY arr
      */
 
-    public static int fairCut(int k, List<Integer> arr) {
+    public static long fairCut(int k, List<Integer> arr) {
     // Write your code here
         
         int n = arr.size();
@@ -64,10 +64,10 @@ class Result1 {
 //        int[] diffs = new int[k];
 //        minindexes = new int[k];
        // Arrays.fill(diffs, Integer.MAX_VALUE);
-        SortedMap<Integer, List<Integer>> diffMap = new TreeMap<>();
+        SortedMap<Long, List<Integer>> diffMap = new TreeMap<>();
         List<Integer> maxList = new ArrayList<>();
         for (int i = 0; i < arr.size(); ++i) {
-            int diff = 0;
+            long diff = 0;
             for(int j = 0; j < arr.size(); ++j) {
                 diff += Math.abs(arr.get(i) - arr.get(j));
             }
@@ -76,19 +76,23 @@ class Result1 {
                 list.add(i);
                 diffMap.put(diff, list);
             } else {
-                int lastDiff = diffMap.lastKey();
-                if (diffMap.values().size() == k && diff <= lastDiff) {
-                    List<Integer> indexList = diffMap.get(lastDiff);
-                    maxList.add(indexList.remove(0));
-                    diffMap.remove(lastDiff);
-                    indexList = diffMap.get(diff);
-                    if (indexList != null) {
-                        indexList.add(i);
-                        diffMap.put(diff, indexList);
+                long lastDiff = diffMap.lastKey();
+                if (diffMap.values().stream().mapToInt(v -> v.size()).sum() == k) {
+                    if (diff <= lastDiff) {
+                        List<Integer> indexList = diffMap.get(lastDiff);
+                        maxList.add(indexList.remove(0));
+                        diffMap.remove(lastDiff);
+                        indexList = diffMap.get(diff);
+                        if (indexList != null) {
+                            indexList.add(i);
+                            diffMap.put(diff, indexList);
+                        } else {
+                            List<Integer> list = new ArrayList<>();
+                            list.add(i);
+                            diffMap.put(diff, list);
+                        }
                     } else {
-                        List<Integer> list = new ArrayList<>();
-                        list.add(i);
-                        diffMap.put(diff, list);
+                        maxList.add(i);
                     }
 //                    diffMap.put(diff, indexList);
                 }  else {
@@ -107,16 +111,16 @@ class Result1 {
 
            // insertIfMin(diff, i, diffs, minindexes, maxindexes);
         }
-        int sum = 0;
+        long sum = 0;
         Collection<List<Integer>> values = diffMap.values();
         for (List<Integer> ivalues : values) {
             for(Integer value : ivalues) {
                 for (Integer mvalue : maxList) {
-                    sum += Math.abs(value - mvalue);
+                    sum += Math.abs(arr.get(value) - arr.get(mvalue));
                 }
             }
         }
-        return sum;
+        return  sum;
     }
 
 }
@@ -124,7 +128,7 @@ class Result1 {
 public class FairCut {
     public static void main(String[] args) throws IOException {
         BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(System.in));
-        // BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(System.getenv("OUTPUT_PATH")));
+//        BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(System.getenv("OUTPUT_PATH")));
 
         String[] firstMultipleInput = bufferedReader.readLine().replaceAll("\\s+$", "").split(" ");
 
@@ -136,13 +140,13 @@ public class FairCut {
             .map(Integer::parseInt)
             .collect(toList());
 
-        int result = Result1.fairCut(k, arr);
+        long result = Result1.fairCut(k, arr);
         System.out.println(result);
         
-        // bufferedWriter.write(String.valueOf(result));
-        // bufferedWriter.newLine();
+//        bufferedWriter.write(String.valueOf(result));
+//        bufferedWriter.newLine();
 
         bufferedReader.close();
-        //bufferedWriter.close();
+//        bufferedWriter.close();
     }
 }
