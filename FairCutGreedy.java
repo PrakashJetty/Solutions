@@ -17,35 +17,6 @@ class Result1 {
     static int[] maxindexes;
     static int minindex = 0, maxindex = 0;
 
-//    public static void insertIfMin(int diff, int index, int[] diffs,  int[] minindexes, int[] maxindexes) {
-//        boolean min = false;
-//        int i = 0;
-//        for(i < diffs.length; ++i) {
-//            if (diff < diffs[i]) {
-//                min = true;
-//                if (diffs[i] == Integer.MAX_VALUE) {
-//                    diffs[i] = diff;
-//                    break;
-//                } else {
-//                    int temp = diffs[i];
-//                    diffs[i] = diff;
-//                    diff = temp;
-//                }
-//
-//            }
-//        }
-//        if (min) {
-//            minindexes[minindex] = index;
-//            ++minindex;
-//        } else {
-//            if (i == diffs.length) {
-//
-//            }
-//            maxindexes[maxindex] = index;
-//            ++maxindex;
-//        }
-//
-//    }
 
     /*
      * Complete the 'fairCut' function below.
@@ -74,45 +45,6 @@ class Result1 {
                 diffs[i][j]= diff;
             }
             diffs[i][j] = cdiff;
-//             if (i == 0) {
-//                 List<Integer> list = new ArrayList<>();
-//                 list.add(i);
-//                 diffMap.put(diff, list);
-//             } else {
-//                 long lastDiff = diffMap.lastKey();
-//                 if (diffMap.values().stream().mapToInt(v -> v.size()).sum() == k) {
-//                     if (diff <= lastDiff) {
-//                         List<Integer> indexList = diffMap.get(lastDiff);
-//                         maxList.add(indexList.remove(0));
-//                         diffMap.remove(lastDiff);
-//                         indexList = diffMap.get(diff);
-//                         if (indexList != null) {
-//                             indexList.add(i);
-//                             diffMap.put(diff, indexList);
-//                         } else {
-//                             List<Integer> list = new ArrayList<>();
-//                             list.add(i);
-//                             diffMap.put(diff, list);
-//                         }
-//                     } else {
-//                         maxList.add(i);
-//                     }
-// //                    diffMap.put(diff, indexList);
-//                 }  else {
-//                     List<Integer> indexList = diffMap.get(diff);
-//                     if (indexList != null) {
-//                         indexList.add(i);
-//                         diffMap.put(diff, indexList);
-//                     } else {
-//                         List<Integer> list = new ArrayList<>();
-//                         list.add(i);
-//                         diffMap.put(diff, list);
-//                     }
-//                 }
-            //}
-
-
-           // insertIfMin(diff, i, diffs, minindexes, maxindexes);
         }
 
         int[] set1 = new int[k];
@@ -175,13 +107,6 @@ class Result1 {
             }
 
         }
-
-//        for (int s = 0 , iex = 0; s < n; ++s) {
-//            if (!nset.containsKey(s)) {
-//                set2[iex] = s;
-//                ++iex;
-//            }
-//        }
 
         long sum = 0;
         for (int mini : set1) {
