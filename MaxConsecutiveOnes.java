@@ -1,4 +1,4 @@
-
+//https://leetcode.com/problems/max-consecutive-ones-iii/
 public class MaxConsecutiveOnes {
 	public static int longestOnes(int[] nums, int k) {
 		int oneCount = 0, rightIndex = 0, leftIndex = 0, maxCount = 0;
